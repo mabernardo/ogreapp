@@ -55,9 +55,25 @@ void TutorialApplication::createScene(void)
     spotLight->setDiffuseColour(0, 0, 1.0);
     spotLight->setSpecularColour(0, 0, 1.0);
     spotLight->setType(Ogre::Light::LT_SPOTLIGHT);
+    // An spotlight requires both a position and a direction - remember it acts like a flashlight
     spotLight->setDirection(-1, -1, 0);
     spotLight->setPosition(Ogre::Vector3(200, 200, 0));
     spotLight->setSpotlightRange(Ogre::Degree(35), Ogre::Degree(50));
+
+    // A directional light does not have a position because it is modeled as point light that is
+    // infinitely far away.
+    Ogre::Light* directionalLight = mSceneMgr->createLight("DirectionalLight");
+    directionalLight->setType(Ogre::Light::LT_DIRECTIONAL);
+    directionalLight->setDiffuseColour(Ogre::ColourValue(.4, 0, 0));
+    directionalLight->setSpecularColour(Ogre::ColourValue(.4, 0, 0));
+    directionalLight->setDirection(Ogre::Vector3(0, -1, 1));
+
+    // A point light has no direction. It only has a position.
+    Ogre::Light* pointLight = mSceneMgr->createLight("PointLight");
+    pointLight->setType(Ogre::Light::LT_POINT);
+    pointLight->setDiffuseColour(.3, .3, .3);
+    pointLight->setSpecularColour(.3, .3, .3);
+    pointLight->setPosition(Ogre::Vector3(0, 150, 250));
 }
 
 
