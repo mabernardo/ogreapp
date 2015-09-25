@@ -81,21 +81,52 @@ void TutorialApplication::createScene(void)
         }
     }
     mTerrainGroup->freeTemporaryResources();
+
+    /* Sky Block */
+    //mSceneMgr->setSkyBox(true, "Examples/SpaceSkyBox");
+    //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+    Ogre::Plane plane;
+    plane.d = 1000;
+    plane.normal = Ogre::Vector3::NEGATIVE_UNIT_Y;
+    mSceneMgr->setSkyPlane(true, plane, "Examples/SpaceSkyPlane", 1500, 50, true, 1.5, 150, 150);
 }
 
 void TutorialApplication::createFrameListener()
 {
     BaseApplication::createFrameListener();
+    mInfoLabel = mTrayMgr->createLabel(OgreBites::TL_TOP, "TerrainInfo", "", 350);
 }
 
 void TutorialApplication::destroyScene()
 {
+    OGRE_DELETE mTerrainGroup;
+    OGRE_DELETE mTerrainGlobals;
 }
 
 bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
 {
     bool ret = BaseApplication::frameRenderingQueued(fe);
+    if (mTerrainGroup->isDerivedDataUpdateInProgress())
+    {
+        mTrayMgr->moveWidgetToTray(mInfoLabel, OgreBites::TL_TOP, 0);
+        mInfoLabel->show();
 
+        if (mTerrainsImported)
+            mInfoLabel->setCaption("Buildin terrain...");
+        else
+            mInfoLabel->setCaption("Updating terrain...");
+    }
+    else
+    {
+        mTrayMgr->removeWidgetFromTray(mInfoLabel);
+        mInfoLabel->hide();
+
+        if (mTerrainsImported)
+        {
+            mTerrainGroup->saveAllTerrains(true);
+            mTerrainsImported = false;
+        }
+    }
     return ret;
 }
 
