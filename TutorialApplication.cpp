@@ -64,7 +64,41 @@ bool TutorialApplication::processUnbufferedInput(const Ogre::FrameEvent& fe)
         light->setVisible(!light->isVisible());
     }
     mouseDownLastFrame = leftMouseDown;
+    toggleTimer -= fe.timeSinceLastFrame;
+    if ((toggleTimer < 0) && mMouse->getMouseState().buttonDown(OIS::MB_Right))
+    {
+        toggleTimer = 0.5;
 
+        Ogre::Light* light = mSceneMgr->getLight("PointLight");
+        light->setVisible(!light->isVisible());
+    }
+
+    Ogre::Vector3 dirVec = Ogre::Vector3::ZERO;
+    if (mKeyboard->isKeyDown(OIS::KC_I))
+        dirVec.z -= move;
+    if (mKeyboard->isKeyDown(OIS::KC_K))
+        dirVec.z += move;
+    if (mKeyboard->isKeyDown(OIS::KC_U))
+        dirVec.y += move;
+    if (mKeyboard->isKeyDown(OIS::KC_O))
+        dirVec.y -= move;
+    if (mKeyboard->isKeyDown(OIS::KC_J))
+    {
+        if (mKeyboard->isKeyDown(OIS::KC_LSHIFT))
+            mSceneMgr->getSceneNode("NinjaNode")->yaw(Ogre::Degree(5 * rotate));
+        else
+            dirVec.x -= move;
+    }
+    if (mKeyboard->isKeyDown((OIS::KC_L)))
+    {
+        if (mKeyboard->isKeyDown(OIS::KC_LSHIFT))
+            mSceneMgr->getSceneNode("NinjaNode")->yaw(Ogre::Degree(-5 * rotate));
+        else
+            dirVec.x += move;
+    }
+    mSceneMgr->getSceneNode("NinjaNode")->translate(
+        dirVec * fe.timeSinceLastFrame,
+        Ogre::Node::TS_LOCAL);
     return true;
 }
 
