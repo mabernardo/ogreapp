@@ -54,6 +54,13 @@ void TutorialApplication::createScene(void)
     light->setDiffuseColour(Ogre::ColourValue::White);
     light->setSpecularColour(Ogre::ColourValue(0.4, 0.4, 0.4));
 
+    // Fog
+    Ogre::ColourValue fadeColour(0.9, 0.9, 0.9);
+    mWindow->getViewport(0)->setBackgroundColour(fadeColour);
+    //mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour, 0, 600, 900);
+    //mSceneMgr->setFog(Ogre::FOG_EXP, fadeColour, 0.0002);
+    mSceneMgr->setFog(Ogre::FOG_EXP2, fadeColour, 0.0002);
+
     mTerrainGlobals = OGRE_NEW Ogre::TerrainGlobalOptions();
     mTerrainGroup = OGRE_NEW Ogre::TerrainGroup(
         mSceneMgr,
@@ -84,11 +91,13 @@ void TutorialApplication::createScene(void)
 
     /* Sky Block */
     //mSceneMgr->setSkyBox(true, "Examples/SpaceSkyBox");
-    //mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+    mSceneMgr->setSkyDome(true, "Examples/CloudySky", 5, 8);
+    /*
     Ogre::Plane plane;
     plane.d = 1000;
     plane.normal = Ogre::Vector3::NEGATIVE_UNIT_Y;
     mSceneMgr->setSkyPlane(true, plane, "Examples/SpaceSkyPlane", 1500, 50, true, 1.5, 150, 150);
+    */
 }
 
 void TutorialApplication::createFrameListener()
