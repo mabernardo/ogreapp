@@ -18,6 +18,11 @@ This source file is part of the
 
 //-------------------------------------------------------------------------------------
 TutorialApplication::TutorialApplication(void)
+    :
+    mRotate(.13),
+    mMove(250),
+    mCamNode(0),
+    mDirection(Ogre::Vector3::ZERO)
 {
 }
 //-------------------------------------------------------------------------------------
@@ -28,80 +33,165 @@ TutorialApplication::~TutorialApplication(void)
 //-------------------------------------------------------------------------------------
 void TutorialApplication::createScene(void)
 {
-    mSceneMgr->setAmbientLight(Ogre::ColourValue(.25, .25, .25));
+    mSceneMgr->setAmbientLight(Ogre::ColourValue(.2, .2, .2));
 
-    Ogre::Light* pointLight = mSceneMgr->createLight("PointLight");
-    pointLight->setType(Ogre::Light::LT_POINT);
-    pointLight->setPosition(250, 150, 250);
-    pointLight->setDiffuseColour(Ogre::ColourValue::White);
-    pointLight->setSpecularColour(Ogre::ColourValue::White);
+    Ogre::Entity* tudorEntity = mSceneMgr->createEntity("tudorhouse.mesh");
+    Ogre::SceneNode* node = mSceneMgr->getRootSceneNode()->createChildSceneNode("Node");
+    node->attachObject(tudorEntity);
 
-    Ogre::Entity* ninjaEntity = mSceneMgr->createEntity("ninja.mesh");
-    Ogre::SceneNode* ninjaNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("NinjaNode");
-    ninjaNode->attachObject(ninjaEntity);
+    Ogre::Light* light = mSceneMgr->createLight("Light1");
+    light->setType(Ogre::Light::LT_POINT);
+    light->setPosition(Ogre::Vector3(250, 150, 250));
+    light->setDiffuseColour(Ogre::ColourValue::White);
+    light->setSpecularColour(Ogre::ColourValue::White);
+
+    node = mSceneMgr->getRootSceneNode()->createChildSceneNode(
+        "CamNode1", Ogre::Vector3(1200, -370, 0));
+    node->yaw(Ogre::Degree(90));
+
+    mCamNode = node;
+    node->attachObject(mCamera);
+
+    node = mSceneMgr->getRootSceneNode()->createChildSceneNode(
+        "CamNode2", Ogre::Vector3(-500, -370, 1000));
+    node->yaw(Ogre::Degree(-30));
 }
 
 bool TutorialApplication::frameRenderingQueued(const Ogre::FrameEvent& fe)
 {
     bool ret = BaseApplication::frameRenderingQueued(fe);
-    if (!processUnbufferedInput(fe))
-        return false;
+    mCamNode->translate(mDirection * fe.timeSinceLastEvent, Ogre::Node::TS_LOCAL);
 
     return ret;
 }
 
-bool TutorialApplication::processUnbufferedInput(const Ogre::FrameEvent& fe)
+bool TutorialApplication::keyPressed(const OIS::KeyEvent& ke)
 {
-    static bool mouseDownLastFrame = false;
-    static Ogre::Real toggleTimer = 0.0;
-    static Ogre::Real rotate = .13;
-    static Ogre::Real move = 250;
+    switch (ke.key)
+    {
+    case OIS::KC_ESCAPE:
+        mShutDown = true;
+        break;
 
-    bool leftMouseDown = mMouse->getMouseState().buttonDown(OIS::MB_Left);
-    if (leftMouseDown && !mouseDownLastFrame)
-    {
-        Ogre::Light* light = mSceneMgr->getLight("PointLight");
-        light->setVisible(!light->isVisible());
-    }
-    mouseDownLastFrame = leftMouseDown;
-    toggleTimer -= fe.timeSinceLastFrame;
-    if ((toggleTimer < 0) && mMouse->getMouseState().buttonDown(OIS::MB_Right))
-    {
-        toggleTimer = 0.5;
+    case OIS::KC_1:
+        mCamera->getParentSceneNode()->detachObject(mCamera);
+        mCamNode = mSceneMgr->getSceneNode("CamNode1");
+        mCamNode->attachObject(mCamera);
+        break;
 
-        Ogre::Light* light = mSceneMgr->getLight("PointLight");
-        light->setVisible(!light->isVisible());
-    }
+    case OIS::KC_2:
+        mCamera->getParentSceneNode()->detachObject(mCamera);
+        mCamNode = mSceneMgr->getSceneNode("CamNode2");
+        mCamNode->attachObject(mCamera);
+        break;
 
-    Ogre::Vector3 dirVec = Ogre::Vector3::ZERO;
-    if (mKeyboard->isKeyDown(OIS::KC_I))
-        dirVec.z -= move;
-    if (mKeyboard->isKeyDown(OIS::KC_K))
-        dirVec.z += move;
-    if (mKeyboard->isKeyDown(OIS::KC_U))
-        dirVec.y += move;
-    if (mKeyboard->isKeyDown(OIS::KC_O))
-        dirVec.y -= move;
-    if (mKeyboard->isKeyDown(OIS::KC_J))
-    {
-        if (mKeyboard->isKeyDown(OIS::KC_LSHIFT))
-            mSceneMgr->getSceneNode("NinjaNode")->yaw(Ogre::Degree(5 * rotate));
-        else
-            dirVec.x -= move;
+    case OIS::KC_UP:
+    case OIS::KC_W:
+        mDirection.z = -mMove;
+        break;
+
+    case OIS::KC_DOWN:
+    case OIS::KC_S:
+        mDirection.z = mMove;
+        break;
+
+    case OIS::KC_LEFT:
+    case OIS::KC_A:
+        mDirection.x = -mMove;
+        break;
+
+    case OIS::KC_RIGHT:
+    case OIS::KC_D:
+        mDirection.x = mMove;
+        break;
+
+    case OIS::KC_PGDOWN:
+    case OIS::KC_E:
+        mDirection.y = -mMove;
+        break;
+
+    case OIS::KC_PGUP:
+    case OIS::KC_Q:
+        mDirection.y = mMove;
+        break;
+
+    default:
+        break;
     }
-    if (mKeyboard->isKeyDown((OIS::KC_L)))
-    {
-        if (mKeyboard->isKeyDown(OIS::KC_LSHIFT))
-            mSceneMgr->getSceneNode("NinjaNode")->yaw(Ogre::Degree(-5 * rotate));
-        else
-            dirVec.x += move;
-    }
-    mSceneMgr->getSceneNode("NinjaNode")->translate(
-        dirVec * fe.timeSinceLastFrame,
-        Ogre::Node::TS_LOCAL);
     return true;
 }
 
+bool TutorialApplication::keyReleased(const OIS::KeyEvent& ke)
+{
+    switch(ke.key)
+    {
+    case OIS::KC_UP:
+    case OIS::KC_W:
+        mDirection.z = 0;
+        break;
+
+    case OIS::KC_DOWN:
+    case OIS::KC_S:
+        mDirection.z = 0;
+        break;
+
+    case OIS::KC_LEFT:
+    case OIS::KC_A:
+        mDirection.x = 0;
+        break;
+
+    case OIS::KC_RIGHT:
+    case OIS::KC_D:
+        mDirection.x = 0;
+        break;
+
+    case OIS::KC_PGDOWN:
+    case OIS::KC_E:
+        mDirection.y = 0;
+        break;
+
+    case OIS::KC_PGUP:
+    case OIS::KC_Q:
+        mDirection.y = 0;
+        break;
+
+    default:
+        break;
+    }
+    return true;
+}
+
+bool TutorialApplication::mouseMoved(const OIS::MouseEvent& me)
+{
+    if (me.state.buttonDown(OIS::MB_Right))
+    {
+        mCamNode->yaw(Ogre::Degree(-mRotate * me.state.X.rel), Ogre::Node::TS_WORLD);
+        mCamNode->pitch(Ogre::Degree(-mRotate * me.state.Y.rel), Ogre::Node::TS_LOCAL);
+    }
+    return true;
+}
+
+bool TutorialApplication::mousePressed(const OIS::MouseEvent& me, OIS::MouseButtonID id)
+{
+    switch(id)
+    {
+    case OIS::MB_Left:
+    {
+        Ogre::Light* light = mSceneMgr->getLight("Light1");
+        light->setVisible(!light->isVisible());
+    }
+    break;
+
+    default:
+        break;
+    }
+    return true;
+}
+
+bool TutorialApplication::mouseReleased(const OIS::MouseEvent& me, OIS::MouseButtonID id)
+{
+    return true;
+}
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
